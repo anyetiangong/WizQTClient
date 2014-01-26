@@ -99,7 +99,7 @@ PluginView::PluginView(QWidget *parent)
     m_ui->categoryWidget->setColumnWidth(C_LOAD, 40);
 
     // cannot disable these
-    m_whitelist << QString::fromLatin1("Core");
+    m_whitelist << "Core" << "WizService";
 
     connect(PluginManager::instance(), SIGNAL(pluginsChanged()), this, SLOT(updateList()));
     connect(m_ui->categoryWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
