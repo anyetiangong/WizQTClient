@@ -5,6 +5,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+#include <wizservice/avatar.h>
+
 #include "wizdef.h"
 #include "share/wizsettings.h"
 #include "share/wizDatabaseManager.h"
@@ -13,7 +15,6 @@
 #include "sync/wizkmxmlrpc.h"
 #include "wizWebSettingsDialog.h"
 #include "sync/avataruploader.h"
-#include "sync/avatar.h"
 #include "sync/token.h"
 
 using namespace WizService;

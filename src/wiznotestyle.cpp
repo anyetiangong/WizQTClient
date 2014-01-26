@@ -16,7 +16,6 @@
 #include "messagelistview.h"
 
 #include "utils/stylehelper.h"
-#include "sync/avatar.h"
 
 #ifdef Q_OS_MAC
 #include "mac/wizmachelper.h"

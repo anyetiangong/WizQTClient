@@ -4,6 +4,8 @@
 #include <QApplication>
 #include <QMenu>
 
+#include <wizservice/avatar.h>
+
 #include "share/wizDatabaseManager.h"
 #include "wizCategoryView.h"
 #include "widgets/wizScrollBar.h"
@@ -16,7 +18,6 @@
 #include "utils/stylehelper.h"
 #include "utils/logger.h"
 
-#include "sync/avatar.h"
 #include "thumbcache.h"
 
 using namespace Core;

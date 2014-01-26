@@ -11,8 +11,8 @@
 #include <QDebug>
 
 #include <coreplugin/icore.h>
+#include <wizservice/avatar.h>
 
-#include "sync/avatar.h"
 #include "share/wizDatabaseManager.h"
 #include "share/wizDatabase.h"
 #include "utils/pinyin.h"

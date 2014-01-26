@@ -3,10 +3,13 @@ project(wizservice_plugin)
 set(wizservice_HEADERS
     wizservice_global.h
     wizserviceplugin.h
+    avatar.h
+    avatar_p.h
 )
 
 set(wizservice_SOURCES
     wizserviceplugin.cpp
+    avatar.cpp
 )
 
 set(wizservice_FORMS
@@ -27,6 +30,7 @@ add_definitions(-DWIZSERVICE_LIBRARY)
 
 include_directories(
     ${libs_SOURCE_DIR}
+    ${wiznote_SOURCE_DIR} # FIXME: remove this
 )
 target_link_libraries(wizservice extensionsystem)
 

@@ -68,7 +68,6 @@ set(wiznote_SOURCES
     sync/apientry.cpp
     share/wizObjectDataDownloader.cpp
     #share/wizUserAvatar.cpp
-    sync/avatar.cpp
     sync/wizkmxmlrpc.cpp
     sync/wizkmsync.cpp
     sync/asyncapi.cpp
@@ -192,8 +191,6 @@ set(wiznote_HEADERS
     sync/apientry_p.h
     share/wizObjectDataDownloader.h
     #share/wizUserAvatar.h
-    sync/avatar.h
-    sync/avatar_p.h
     utils/stylehelper.h
     utils/pathresolve.h
 
@@ -387,5 +384,6 @@ target_link_libraries(${PROJECT_NAME}
     extensionsystem
     aggregation
     coreplugin
+    wizservice # FIXME: should remove this dependency !
     ${CMAKE_DL_LIBS}
 )

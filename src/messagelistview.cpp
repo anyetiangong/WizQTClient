@@ -9,10 +9,10 @@
 #include <QDebug>
 
 #include <extensionsystem/pluginmanager.h>
+#include <wizservice/avatar.h>
 
 #include "utils/stylehelper.h"
 #include "utils/misc.h"
-#include "sync/avatar.h"
 #include "sync/asyncapi.h"
 
 #include "share/wizDatabaseManager.h"

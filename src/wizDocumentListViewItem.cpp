@@ -2,10 +2,11 @@
 
 #include <QFile>
 #include <QFileInfo>
-
 #include <QPixmapCache>
 #include <QPainter>
 #include <QStyleOptionViewItemV4>
+
+#include <wizservice/avatar.h>
 
 #include "wizDocumentListView.h"
 #include "share/wizDatabaseManager.h"
@@ -13,7 +14,6 @@
 #include "wizPopupButton.h"
 
 #include "thumbcache.h"
-#include "sync/avatar.h"
 #include "utils/stylehelper.h"
 
 using namespace Core;

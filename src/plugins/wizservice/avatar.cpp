@@ -13,9 +13,9 @@
 #include <QPixmapCache>
 #include <QDateTime>
 
-#include "apientry.h"
-#include "../utils/pathresolve.h"
-#include "../utils/stylehelper.h"
+#include "sync/apientry.h"
+#include "utils/pathresolve.h"
+#include "utils/stylehelper.h"
 
 using namespace WizService;
 using namespace WizService::Internal;

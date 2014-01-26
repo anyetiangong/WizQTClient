@@ -22,8 +22,9 @@ public:
     MarkdownPlugin();
     ~MarkdownPlugin();
 
-    bool initialize(const QStringList& arguments, QString* errorMessage = 0);
-    void extensionsInitialized();
+    virtual bool initialize(const QStringList& arguments, QString* errorMessage = 0);
+    virtual bool delayedInitialize();
+    virtual void extensionsInitialized();
 
 private:
     QString cachePath();

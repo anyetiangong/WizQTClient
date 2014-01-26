@@ -3,7 +3,7 @@
 
 #include <extensionsystem/iplugin.h>
 
-namespace Core {
+namespace WizService {
 namespace Internal {
 
 class WizServicePlugin : public ExtensionSystem::IPlugin
@@ -21,6 +21,6 @@ public:
 };
 
 } // namespace Internal
-} // namespace Core
+} // namespace WizService
 
 #endif // WIZSERVICEPLUGIN_H

@@ -34,10 +34,16 @@ bool MarkdownPlugin::initialize(const QStringList &arguments, QString *errorMess
     return copyRes2Cache();
 }
 
-void MarkdownPlugin::extensionsInitialized()
+bool MarkdownPlugin::delayedInitialize()
 {
     connect(Core::ICore::instance(), SIGNAL(viewNoteLoaded(Core::INoteView*,WIZDOCUMENTDATA,bool)),
             SLOT(onViewNoteLoaded(Core::INoteView*,WIZDOCUMENTDATA,bool)));
+
+    return true;
+}
+
+void MarkdownPlugin::extensionsInitialized()
+{
 }
 
 void MarkdownPlugin::onViewNoteLoaded(INoteView* view, const WIZDOCUMENTDATA& doc, bool bOk)

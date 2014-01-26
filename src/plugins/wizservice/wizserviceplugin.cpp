@@ -4,8 +4,10 @@
 #include <QDebug>
 #include <QDateTime>
 
-using namespace Core;
-using namespace Core::Internal;
+#include "avatar.h"
+
+using namespace WizService;
+using namespace WizService::Internal;
 
 WizServicePlugin::WizServicePlugin()
 {
@@ -17,6 +19,8 @@ WizServicePlugin::~WizServicePlugin()
 
 bool WizServicePlugin::initialize(const QStringList &arguments, QString *errorMessage)
 {
+    new WizService::AvatarHost();
+
     return true;
 }
 

@@ -10,6 +10,9 @@
 #include <QDesktopServices>
 
 #include <extensionsystem/pluginmanager.h>
+#include <extensionsystem/pluginerroroverview.h>
+#include <extensionsystem/pluginspec.h>
+
 #include "wizmainwindow.h"
 #include "wizupdaterprogressdialog.h"
 #include "wizLoginDialog.h"
@@ -21,11 +24,20 @@
 #include "utils/logger.h"
 #include "sync/token.h"
 #include "sync/apientry.h"
-#include "sync/avatar.h"
 #include "thumbcache.h"
 
 using namespace ExtensionSystem;
 using namespace Core::Internal;
+
+const char corePluginNameC[] = "Core";
+const char wizPluginNameC[] = "WizService";
+
+typedef QList<PluginSpec *> PluginSpecSet;
+
+static inline QString msgCoreLoadFailure(const QString &why)
+{
+    return QCoreApplication::translate("Application", "Failed to load core: %1").arg(why);
+}
 
 static inline QStringList getPluginPaths()
 {
@@ -115,6 +127,25 @@ int main(int argc, char *argv[])
     const QStringList pluginPaths = getPluginPaths();
     PluginManager::setPluginPaths(pluginPaths);
 
+    // check core and wizservice plugin exist
+    const PluginSpecSet plugins = PluginManager::plugins();
+    PluginSpec* coreplugin = 0;
+    PluginSpec* wizplugin = 0;
+    foreach (PluginSpec *spec, plugins) {
+        if (spec->name() == QLatin1String(corePluginNameC)) {
+            coreplugin = spec;
+        } else if (spec->name() == QLatin1String(wizPluginNameC)) {
+            wizplugin = spec;
+        }
+    }
+
+    if (!coreplugin || !wizplugin) {
+        QString nativePaths = QDir::toNativeSeparators(pluginPaths.join(QLatin1String(",")));
+        const QString reason = QCoreApplication::translate("Application", "Could not find 'Core.pluginspec' in %1").arg(nativePaths);
+        qCritical("%s", qPrintable(msgCoreLoadFailure(reason)));
+        return 1;
+    }
+
     // use 3 times(30M) of Qt default usage
     int nCacheSize = globalSettings->value("Common/Cache", 10240*3).toInt();
     QPixmapCache::setCacheLimit(nCacheSize);
@@ -200,18 +231,26 @@ int main(int argc, char *argv[])
 
     dbMgr.db().SetPassword(::WizEncryptPassword(strPassword));
 
-    // FIXME: move to plugins
-    WizService::AvatarHost avatarHost;
-
     // FIXME: move to core plugin initialize
     Core::ThumbCache cache;
 
-
+    PluginManager::loadPlugins();
+    if (coreplugin->hasError()) {
+        qCritical("%s", qPrintable(msgCoreLoadFailure(coreplugin->errorString())));
+        return 1;
+    }
+    if (wizplugin->hasError()) {
+        qCritical("%s", qPrintable(msgCoreLoadFailure(coreplugin->errorString())));
+        return 1;
+    }
+    if (PluginManager::hasError()) {
+        PluginErrorOverview *errorOverview = new PluginErrorOverview(QApplication::activeWindow());
+        errorOverview->setAttribute(Qt::WA_DeleteOnClose);
+        errorOverview->setModal(true);
+        errorOverview->show();
+    }
 
     MainWindow w(dbMgr);
-
-    //settings->setValue("Users/DefaultUser", strUserId);
-    PluginManager::loadPlugins();
 
     w.show();
     w.init();

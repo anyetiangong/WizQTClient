@@ -68,7 +68,7 @@ void ThumbCachePrivate::load_impl(const QString& strKbGUID, const QString& strGU
     if (db.PadAbstractFromGUID(strGUID, abs)) {
         bUpdated = false;
     } else {
-        qDebug() << "[ThumbCache]thumb not exist, try update: " << strGUID;
+        //qDebug() << "[ThumbCache]thumb not exist, try update: " << strGUID;
         if (db.UpdateDocumentAbstract(strGUID)) {
             bUpdated = true;
         } else {
