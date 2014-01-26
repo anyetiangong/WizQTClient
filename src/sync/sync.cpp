@@ -1586,126 +1586,6 @@ bool WizDownloadMessages(IWizKMSyncEvents* pEvents, CWizKMAccountsServer& server
     return TRUE;
 }
 
-void WizDownloadUserAvatars(IWizKMSyncEvents* pEvents, IWizSyncableDatabase* pDatabase, bool bBackground)
-{
-    //
-    /*
-    ////每天一次，或者用户手工同步////
-    */
-    //TODO: modify this code
-    /*
-    if (!::WizDayOnce(WIZKM_REG_KEY_ROOT, _T("DownloadUserAvatars")))
-    {
-        if (bBackground)
-            return;
-    }
-    */
-    //
-    //TODO: getavatar url
-    //QString strURLAvatar = ::WizKMWebSiteGetReturn(_T("avatar"));
-    CString strURLAvatar = "";
-    strURLAvatar.Trim();
-    //
-    if (0 != strURLAvatar.Find(_T("http"))
-        || strURLAvatar.GetLength() > 1024)
-    {
-        return;
-    }
-    //
-    if (pEvents->IsStop())
-        return;
-    //
-    pEvents->OnStatus("Downloading user image");
-    //
-    CWizStdStringArray arrayPersonalGroupUser;
-    //
-    /*
-    ////普通群组头像不需要主动下载，额可以在阅读的时候下载////
-    //db.GetAllGroupUserIds(arrayPersonalGroupUser);		////
-    */
-    //
-    CWizStdStringArray arrayBizGroupUser;
-    pDatabase->GetAllBizUserIds(arrayBizGroupUser);
-    //
-    QString strCurrentUserID = pDatabase->GetUserId();
-    //
-    CWizStdStringArray arrayAllUserID;
-    arrayAllUserID.push_back(strCurrentUserID);
-    arrayAllUserID.insert(arrayAllUserID.begin(), arrayPersonalGroupUser.begin(), arrayPersonalGroupUser.end());
-    arrayAllUserID.insert(arrayAllUserID.begin(), arrayBizGroupUser.begin(), arrayBizGroupUser.end());
-    //
-    std::set<QString> downloaded;
-    //
-    COleDateTime tNow = ::WizGetCurrentTime();
-    //
-    /*
-    QString strSettingsFileName = ::WizKMGetAvatarsPath() + _T("settings.ini");
-    CWizIniFileEx settings;
-    settings.LoadFromFile(strSettingsFileName);
-
-    for (CWizStdStringArray::const_iterator it = arrayAllUserID.begin();
-        it != arrayAllUserID.end();
-        it++)
-    {
-        QString strUserId = *it;
-        //
-        if (downloaded.find(strUserId) != downloaded.end())
-            continue;
-        //
-        if (pEvents->IsStop())
-            break;
-        //
-        downloaded.insert(strUserId);
-        //
-        QString strURL(strURLAvatar);
-        strURL.Replace(_T("{userGuid}"), strUserId);
-        //
-        QString strFileName = ::WizKMGetAvatarsPath() + strUserId + _T(".png");
-        //
-        if (strUserId != strCurrentUserID)
-        {
-            if (PathFileExists(strFileName))
-            {
-                COleDateTimeSpan ts = tNow - WizGetFileModifiedTime(strFileName);
-                if (ts.GetDays() <= 7)
-                    continue;
-                //////不需要更新////
-            }
-            else
-            {
-                QString strKey = strUserId;
-                const QString& strUserImageSection = _T("UserImage");
-                QString strTime = settings.GetStringDef(strUserImageSection, strKey);
-                if (!strTime.isEmpty())
-                {
-                    COleDateTimeSpan ts = tNow - ::WizStringToDateTime(strTime);
-                    if (ts.GetDays() <= 7)
-                        continue;
-                }
-                //
-                settings.SetString(strUserImageSection, strKey, ::WizDateTimeToString(tNow));
-            }
-        }
-        //
-        QString strLeft;
-        QString strRight;
-        ::WizStringSimpleSplit(strUserId, '@', strLeft, strRight);
-        pEvents->OnStatus(strLeft);
-        //
-        if (SUCCEEDED(URLDownloadToFile(NULL, strURL, strFileName, 0, NULL)))
-        {
-            if (strUserId == strCurrentUserID)
-            {
-                pEvents->OnSyncStep(wizsyncstepUserAvatarDownloaded, 0);
-            }
-        }
-    }
-    //
-    settings.SaveToUnicodeFile(strSettingsFileName);
-    */
-}
-//
-
 QString downloadFromUrl(const QString& strUrl)
 {
     QNetworkAccessManager net;
@@ -1756,12 +1636,8 @@ void syncGroupUsers(CWizKMAccountsServer& server, const CWizGroupDataArray& arra
     pDatabase->setMeta("SYNC_INFO", "DownloadGroupUsers", QDateTime::currentDateTime().toString());
 }
 
-bool WizSyncDatabase(const WIZUSERINFO& info, IWizKMSyncEvents* pEvents,
-                     IWizSyncableDatabase* pDatabase,
-                     bool bUseWizServer, bool bBackground)
+bool WizSyncDatabase(IWizKMSyncEvents* pEvents, IWizSyncableDatabase* pDatabase, const WIZUSERINFO& info, bool bBackground)
 {
-    Q_UNUSED(bUseWizServer);
-
     pEvents->OnStatus(_TR("-------Sync start--------------"));
     pEvents->OnSyncProgress(0);
     pEvents->OnStatus(_TR("Connecting to server"));
@@ -1771,19 +1647,6 @@ bool WizSyncDatabase(const WIZUSERINFO& info, IWizKMSyncEvents* pEvents,
 
     pEvents->OnSyncProgress(::GetSyncStartProgress(syncAccountLogin));
     pEvents->OnStatus(_TR("Signing in"));
-
-    //QString strPassword = pDatabase->GetPassword();
-    //while (1)
-    //{
-    //    if (server.Login(pDatabase->GetUserId(), strPassword, _T("normal")))
-    //        break;
-
-    //    pEvents->SetLastErrorCode(server.GetLastErrorCode());
-    //    pEvents->OnError(server.GetLastErrorMessage());
-
-    //    return false;
-    //}
-
     pDatabase->SetUserInfo(server.GetUserInfo());
     pEvents->OnSyncProgress(1);
 
@@ -1878,12 +1741,8 @@ bool WizSyncDatabase(const WIZUSERINFO& info, IWizKMSyncEvents* pEvents,
         //
         pDatabase->CloseGroupDatabase(pGroupDatabase);
     }
-    //
-    //
-    WizDownloadUserAvatars(pEvents, pDatabase, bBackground);
-    //
+
     pEvents->OnStatus(_TR("-------Downloading notes--------------"));
-    //
     {
         //pEvents->SetCurrentDatabase(0);
         CWizKMSync syncPrivate(pDatabase, server.m_retLogin, pEvents, FALSE, FALSE, NULL);
@@ -1898,7 +1757,7 @@ bool WizSyncDatabase(const WIZUSERINFO& info, IWizKMSyncEvents* pEvents,
             //pEvents->OnSyncProgress(100);
         }
     }
-    //
+
     if (pEvents->IsStop())
         return FALSE;
     //
@@ -1954,10 +1813,9 @@ bool WizSyncDatabase(const WIZUSERINFO& info, IWizKMSyncEvents* pEvents,
 bool WizUploadDatabase(IWizKMSyncEvents* pEvents, IWizSyncableDatabase* pDatabase, const WIZUSERINFOBASE& info, bool bGroup)
 {
     CWizKMSync sync(pDatabase, info, pEvents, bGroup, TRUE, NULL);
-    bool bRet = sync.Sync();
-    //
-    return bRet;
+    return sync.Sync();
 }
+
 bool WizSyncDatabaseOnly(IWizKMSyncEvents* pEvents, IWizSyncableDatabase* pDatabase, const WIZUSERINFOBASE& info, bool bGroup)
 {
     CWizKMSync sync(pDatabase, info, pEvents, bGroup, FALSE, NULL);
@@ -1966,6 +1824,6 @@ bool WizSyncDatabaseOnly(IWizKMSyncEvents* pEvents, IWizSyncableDatabase* pDatab
     {
         sync.DownloadObjectData();
     }
-    //
+
     return bRet;
 }

@@ -724,7 +724,7 @@ void MainWindow::on_actionAutoSync_triggered()
 
 void MainWindow::on_actionSync_triggered()
 {
-    m_sync->startSync(false);
+    m_sync->startSync(CWizKMSyncThread::Manual);
     m_animateSync->startPlay();
     m_syncTimer->stop();
 }

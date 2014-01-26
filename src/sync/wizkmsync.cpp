@@ -67,11 +67,10 @@ void CWizKMSyncEvents::OnEndKb(const QString& strKbGUID)
 CWizKMSyncThread::CWizKMSyncThread(CWizDatabase& db, QObject* parent)
     : QThread(parent)
     , m_db(db)
-    , m_bNeedSyncAll(true)
     , m_pEvents(NULL)
-    , m_bBackground(true)
+    , m_tLastSyncAll(QDateTime::currentDateTime())
+    , m_mutex(new QMutex())
 {
-    m_tLastSyncAll = QDateTime::currentDateTime();
 }
 
 void CWizKMSyncThread::run()
@@ -79,16 +78,31 @@ void CWizKMSyncThread::run()
     doSync();
 }
 
-void CWizKMSyncThread::startSync(bool bBackground)
+/* sync type:
+ * Manual: user click the sync button, kbguid is not needed.
+ * BackgroundFull: auto triggered for a default interval, 15 minutes currently, kbguid is not needed.
+ * ChangeTriggered: when user modify notes/attachments, sync is triggered, kbguid should not be empty.
+ */
+void CWizKMSyncThread::startSync(SyncType type, const QString& kbguid)
 {
+    if (type == ChangeTriggered) {
+        Q_ASSERT(!kbguid.isEmpty());
+    }
+
     qDebug() << "[Sync]startSync, thread: " << QThread::currentThreadId();
+
     if (isRunning()) {
-        qDebug() << "[Sync]syncing is started, request is schedued"; //FIXME: schedued request
+        qDebug() << "[Sync]syncing is started and request is schedued.";
+
+        m_mutex->lock();
+        m_squeue.push_back(QString::number(type) + ":" + kbguid);
+        m_mutex->unlock();
+
         return;
     }
 
-    m_bNeedSyncAll = true;
-    m_bBackground = bBackground;
+    m_syncType = type;
+    m_syncKb = kbguid;
 
     trySync();
 }
@@ -125,38 +139,41 @@ void CWizKMSyncThread::doSync()
     {
         syncAll();
         m_tLastSyncAll = QDateTime::currentDateTime();
+
+        m_mutex->lock();
+        m_squeue.clear();
+        m_mutex->unlock();
+        return;
     }
-    else if (needQuickSync())
-    {
-        quickSync();
-    }
+
+    quickSync();
 }
 
 bool CWizKMSyncThread::needSyncAll()
 {
-    if (m_bNeedSyncAll)
+    if (m_syncType == Manual)
         return true;
 
-    QDateTime tNow = QDateTime::currentDateTime();
-    if (m_tLastSyncAll.secsTo(QDateTime::currentDateTime()) > FULL_SYNC_INTERVAL)
-    {
-        m_bNeedSyncAll = true;
-    }
+    int nElapsed = m_tLastSyncAll.secsTo(QDateTime::currentDateTime());
+    if (nElapsed > FULL_SYNC_INTERVAL)
+        return true;
 
-    return m_bNeedSyncAll;
+    return false;
 }
 
 bool CWizKMSyncThread::syncAll()
 {
-    m_bNeedSyncAll = false;
-
     syncUserCert();
 
     m_pEvents = new CWizKMSyncEvents();
     connect(m_pEvents, SIGNAL(messageReady(const QString&)), SIGNAL(processLog(const QString&)));
 
     m_pEvents->SetLastErrorCode(0);
-    ::WizSyncDatabase(m_info, m_pEvents, &m_db, true, m_bBackground);
+
+    m_info.strKbGUID = m_db.kbGUID();
+    m_info.strDatabaseServer = ApiEntry::kUrlFromGuid(m_info.strToken, m_info.strKbGUID);
+    bool bBackground = (m_syncType == Manual) ? false : true;
+    ::WizSyncDatabase(m_pEvents, &m_db, m_info, bBackground);
 
     m_pEvents->deleteLater();
     Q_EMIT syncFinished(m_pEvents->GetLastErrorCode(), "");
@@ -174,14 +191,20 @@ void CWizKMSyncThread::syncUserCert()
     }
 }
 
-bool CWizKMSyncThread::needQuickSync()
-{
-    return false;
-}
-
 bool CWizKMSyncThread::quickSync()
 {
-    Q_EMIT syncFinished(0, NULL);
+    Q_ASSERT(!m_syncKb.isEmpty());
+
+    m_pEvents = new CWizKMSyncEvents();
+    m_pEvents->SetLastErrorCode(0);
+    connect(m_pEvents, SIGNAL(messageReady(const QString&)), SIGNAL(processLog(const QString&)));
+
+    m_info.strKbGUID = m_syncKb;
+    m_info.strDatabaseServer = ApiEntry::kUrlFromGuid(m_info.strToken, m_info.strKbGUID);
+    ::WizUploadDatabase(m_pEvents, &m_db, m_info, m_db.kbGUID() == m_syncKb ? false : true);
+
+    m_pEvents->deleteLater();
+    Q_EMIT syncFinished(m_pEvents->GetLastErrorCode(), "");
     return true;
 }
 

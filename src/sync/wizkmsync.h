@@ -32,27 +32,38 @@ class CWizKMSyncThread : public QThread
     Q_OBJECT
 
 public:
+    enum SyncType
+    {
+        Manual,
+        BackgroundFull,
+        ChangeTriggered
+    };
+
     CWizKMSyncThread(CWizDatabase& db, QObject* parent = 0);
-    void startSync(bool bBackground = true);
+    void startSync(SyncType type = BackgroundFull, const QString& kbguid = NULL);
     void stopSync();
 
 protected:
     virtual void run();
 
 private:
-    bool m_bBackground;
+    QMutex* m_mutex;
+    QList<QString> m_squeue;
+    SyncType m_syncType;
+    QString m_syncKb;
+
     QThread* m_worker;
+
     CWizDatabase& m_db;
     WIZUSERINFO m_info;
+
     CWizKMSyncEvents* m_pEvents;
-    bool m_bNeedSyncAll;
     QDateTime m_tLastSyncAll;
 
     Q_INVOKABLE void trySync();
     void doSync();
 
     bool needSyncAll();
-    bool needQuickSync();
     bool syncAll();
     bool quickSync();
 

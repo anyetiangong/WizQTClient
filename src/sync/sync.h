@@ -3,9 +3,20 @@
 
 #include "../share/wizSyncableDatabase.h"
 
-bool WizSyncDatabase(const WIZUSERINFO& info,
-                     IWizKMSyncEvents* pEvents,
+bool WizSyncDatabase(IWizKMSyncEvents* pEvents,
                      IWizSyncableDatabase* pDatabase,
-                     bool bUseWizServer, bool bBackground);
+                     const WIZUSERINFO& info,
+                     bool bBackground);
+
+bool WizUploadDatabase(IWizKMSyncEvents* pEvents,
+                       IWizSyncableDatabase* pDatabase,
+                       const WIZUSERINFOBASE& info,
+                       bool bGroup);
+
+bool WizSyncDatabaseOnly(IWizKMSyncEvents* pEvents,
+                         IWizSyncableDatabase* pDatabase,
+                         const WIZUSERINFOBASE& info,
+                         bool bGroup);
+
 
 #endif // WIZSERVICE_SYNC_H
